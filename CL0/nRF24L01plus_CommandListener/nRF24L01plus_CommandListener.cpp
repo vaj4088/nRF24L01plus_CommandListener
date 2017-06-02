@@ -153,17 +153,14 @@ void localScreenSetup() {
 	//
 	// Width for each item is 9 characters (9 columns).
 	//
-	Serial.println(F("0->Full  Fwd/Aft  Left/Rt")) ;
-	Serial.print(  F("Throttle Pitch    Roll     PitchTrm RollTrm? ")) ;
-	Serial.print(F("???????? ???????? Flags (128=>Lights Off)")) ;
+	Serial.print(  F("Throttle   Item1    Item2    Item3  ")) ;
+	Serial.print(F("  Item4    Item5    Item6    Flags")) ;
 	setNormal() ;
-	moveCursorTo(10, 1) ;
-	Serial.print(F("Use up & down arrows to change settings, and ")) ;
-	Serial.print(F("use left & right arrows to change function.")) ;
 	moveCursorTo(12, 1) ;
 	Serial.print(F("Version ")) ;
 	Serial.print(version) ;
-	Serial.print(versionSuffix) ; hideCursor() ;
+	Serial.print(versionSuffix) ;
+	hideCursor() ;
 }
 
 void setup() {
@@ -179,18 +176,11 @@ void setup() {
 	// Set up the reading pipe (and the unnecessary writing pipe).
 	setUpPipes();
 
-//	Wait a few seconds before sending the first command.
- 	moveCursorTo(14, 1) ; Serial.println(F("Delaying...")) ;
-	delay(4000) ;
+ 	moveCursorTo(14, 1) ;
 
-	// set the timer for the command intervals
-	commandTimer = millis();
-
-	Serial.println("OK.");
+	Serial.println(F("setup() is complete."));
 } // void setup() {
-// get the data for commands every <commandThresh> ms
-// calculate the controller values
-// send the data to the quadcopter
+
 void loop() {
 	// check timer for command input
 	if (millis() - commandTimer > commandThresh) {
