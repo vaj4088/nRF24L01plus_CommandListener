@@ -33,7 +33,7 @@
 // #define RC_DEBUG
 
 const unsigned long version = 20170603 ;
-const char versionSuffix = 'a' ;
+const char versionSuffix = 'b' ;
 
 RF24 myRF24(8, 10);
 
@@ -48,11 +48,11 @@ uint8_t myAddress[][5] = {{223, 25, 85, 87, 193}, {195}, {196}, {197}, {198}};
 const int bufferSize = 8;
 uint8_t myBuffer[bufferSize];
 
-float userCommandTimeSeconds ;
-float userCommandTimeSecondsInitial ;
+unsigned long screenUpdateTimer ;
+const unsigned long screenUpdateThresh = 7 ;
 
-unsigned long commandTimer;
-unsigned long commandThresh = 20;
+unsigned long runTimer ;
+unsigned long commandCount = 0 ;
 
 // initialize the receiver buffer
 void initBuffer() {
@@ -105,44 +105,23 @@ float seconds() {
 	return millis()/1000.0 ;  //  The ".0" is important to make this a float.
 }
 
-boolean screenUpdateItem(byte _line, byte _column, int _value) {
-	moveCursorTo(_line, _column) ;
-	int x = _value ;
-	if (x>=0) {
-		Serial.print("+") ;
-	} else {
-		Serial.print("-") ;
-	}
-	x = abs(x) ;
-	byte leadingSpaces = 2-(int)log10(x) ;
-	for (byte j = 1; j<=leadingSpaces; j++) {
-		Serial.print(" ") ;
-	}
-	Serial.print(x) ;
-	return true ;
-}
-
-boolean screenUpdate(int _item[8]) {
+boolean screenUpdate(uint8_t _item[8], float millisPerCommand) {
 	//
-	// hotItemNumber is in the range [0,7].
-	// Each item is in the range [-128, 127].
+	// Each item is in the range [   0, 255].
 	//
-	moveCursorTo(3, 1);
+	moveCursorTo(3, 3);
 	eraseWholeLine();
-	setCharacterAttributesOff() ;
-	byte column = 2 ;
 	for (byte i = 0; i<8; i++) {
-		screenUpdateItem(3, column, _item[i]) ;
-		column +=9 ;
+		size_t count = Serial.print(_item[i]) ;
+		for (byte j = count; j<9; Serial.print(F(" ")), j++) ;
 	}
-
+	Serial.print(millisPerCommand) ;
 	return true ;
 }
 
 void localScreenSetup() {
 	moveCursorTo(1, 1) ;
 	setBold() ;
-	userCommandTimeSecondsInitial = seconds() ;
 	//
 	// Width for each item is 9 characters (9 columns).
 	//
@@ -169,16 +148,26 @@ void setup() {
 	// Set up the reading pipe (and the unnecessary writing pipe).
 	setUpPipes();
 
+	screenUpdateTimer = millis() ;
+	runTimer = millis() ;
  	moveCursorTo(14, 1) ;
 
 	Serial.println(F("setup() is complete."));
 } // void setup() {
 
 void loop() {
-	// check timer for command input
-	if (millis() - commandTimer > commandThresh) {
-
+	// if there is anything available
+	// read it and count it.
+	if (myRF24.available()) {
+		// read it
+		myRF24.read(myBuffer, bufferSize);
+		// Count it.
+		commandCount++ ;
+	} // if (myRF24.available()) {
+	// check timer for screen update.
+	if (millis() - screenUpdateTimer > screenUpdateThresh) {
 		// reset command timer
-		commandTimer = millis();
+		screenUpdateTimer = millis();
+		screenUpdate(myBuffer, (float)runTimer/commandCount) ;
 	} // if (millis() - commandTimer > commandThresh) {
 } // void loop() {
