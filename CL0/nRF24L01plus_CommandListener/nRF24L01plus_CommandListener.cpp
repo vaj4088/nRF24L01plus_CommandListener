@@ -44,15 +44,10 @@ RF24 myRF24(8, 10);
 // Data: LSByte first to MSByte, MSBit first to LSBit in each byte
 uint8_t myAddress[][5] = {{223, 25, 85, 87, 193}, {195}, {196}, {197}, {198}};
 
-uint8_t commandMessage[] = {0, 128, 128, 128, 128, 128, 128, 0};
-
 // buffer for receiving
 const int bufferSize = 8;
 uint8_t myBuffer[bufferSize];
 
-// User commands and input position.
-byte hotItemNumber = 0 ;
-int userCommand[8] = {0, 0, 0, 0, 0, 0, 0, 0} ;
 float userCommandTimeSeconds ;
 float userCommandTimeSecondsInitial ;
 
@@ -127,7 +122,7 @@ boolean screenUpdateItem(byte _line, byte _column, int _value) {
 	return true ;
 }
 
-boolean screenUpdate(int _hotItemNumber, int _item[8]) {
+boolean screenUpdate(int _item[8]) {
 	//
 	// hotItemNumber is in the range [0,7].
 	// Each item is in the range [-128, 127].
@@ -137,9 +132,7 @@ boolean screenUpdate(int _hotItemNumber, int _item[8]) {
 	setCharacterAttributesOff() ;
 	byte column = 2 ;
 	for (byte i = 0; i<8; i++) {
-		if (i == _hotItemNumber) setCharacterAttributeReverseVideo() ;
 		screenUpdateItem(3, column, _item[i]) ;
-		if (i == _hotItemNumber) setCharacterAttributesOff() ;
 		column +=9 ;
 	}
 
@@ -165,7 +158,7 @@ void localScreenSetup() {
 
 void setup() {
 	screenSetup(115200UL, localScreenSetup) ;
-	screenUpdate(hotItemNumber, userCommand) ;
+	screenUpdate(userCommand) ;
 
 	// init receiver buffer
 	initBuffer();
