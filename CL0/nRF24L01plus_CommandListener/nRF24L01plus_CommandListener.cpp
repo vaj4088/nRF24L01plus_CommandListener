@@ -137,7 +137,6 @@ void localScreenSetup() {
 
 void setup() {
 	screenSetup(115200UL, localScreenSetup) ;
-	screenUpdate(userCommand) ;
 
 	// init receiver buffer
 	initBuffer();
